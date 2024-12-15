@@ -1,0 +1,23 @@
+(library
+ (name IodineLib)
+ (modules ast lexer parser version bytecode vm gc)
+ (libraries ppx_deriving.show)
+ (preprocess
+  (pps ppx_deriving.show))
+ (flags :standard)
+ (modes native))
+
+(documentation)
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser))
+
+(env
+ (dev
+  (flags
+   (:standard -w +a-4)))
+ (release
+  (flags
+   (:standard -w -03))))
