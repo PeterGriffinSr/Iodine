@@ -1,2 +1,2 @@
-x = "Hello, world!\n"
+x = "Hello, world!"
 print(x)

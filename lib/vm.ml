@@ -81,9 +81,9 @@ let rec execute_bytecode instructions env pc =
           (match GC.find_object id with
           | Some (GC.StringObj str) ->
               let proc_str = replace_escape_sequences str in
-              Printf.printf "%s" proc_str
-          | Some (GC.IntObj i) -> Printf.printf "%Ld" i
-          | Some (GC.FloatObj f) -> Printf.printf "%f" f
+              Printf.printf "%s\n" proc_str
+          | Some (GC.IntObj i) -> Printf.printf "%Ld\n" i
+          | Some (GC.FloatObj f) -> Printf.printf "%f\n" f
           | None -> Printf.printf "<Unknown Object>\n");
           execute_bytecode instructions env (pc + 1)
 
