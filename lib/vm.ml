@@ -206,7 +206,6 @@ let rec execute_bytecode instructions env pc =
         else
           let value = Stack.pop stack in
           let id = int_of_float value in
-          Printf.printf "DEBUG: Trying to print object with id %d\n" id;
           (match GC.find_object id with
           | Some (GC.StringObj str) ->
               let proc_str = replace_escape_sequences str in

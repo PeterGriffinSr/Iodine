@@ -52,15 +52,15 @@ let () =
   let lexbuf = Lexing.from_channel input_channel in
   try
     let ast = Parser.program Lexer.token lexbuf in
-    Printf.printf "%s\n" (Ast.Stmt.show ast);
+    (* Printf.printf "%s\n" (Ast.Stmt.show ast); *)
 
     let bytecode = Bytecode.compile_stmt ast in
-    List.iter
+    (* List.iter
       (fun op ->
         Bytecode.pp_opcode Format.str_formatter op;
         let opcode_str = Format.flush_str_formatter () in
         Printf.printf "Generated opcode: %s\n" opcode_str)
-      bytecode;
+      bytecode; *)
     let _result = Vm.run bytecode in
 
     close_in input_channel
