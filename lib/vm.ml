@@ -29,6 +29,10 @@ let replace_escape_sequences str =
   in
   process_chars 0
 
+exception TypeError of string
+
+let type_error msg = raise (TypeError ("Type Error: " ^ msg))
+
 let rec execute_bytecode instructions env pc =
   if pc >= Array.length instructions then
     match Stack.top_opt stack with None -> 0.0 | Some hd -> hd
@@ -55,7 +59,131 @@ let rec execute_bytecode instructions env pc =
         else
           let a = Stack.pop stack in
           let b = Stack.pop stack in
-          Stack.push (b +. a) stack;
+          let a_type = GC.find_object (int_of_float a) in
+          let b_type = GC.find_object (int_of_float b) in
+          (match (a_type, b_type) with
+          | Some (GC.IntObj a_val), Some (GC.IntObj b_val) ->
+              let result = Int64.add a_val b_val in
+              let result_id = GC.allocate_int result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.FloatObj b_val) ->
+              let result = a_val +. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.IntObj a_val), Some (GC.FloatObj b_val) ->
+              let result = Int64.to_float a_val +. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.IntObj b_val) ->
+              let result = a_val +. Int64.to_float b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | _, _ -> type_error "Invalid types for addition");
+          execute_bytecode instructions env (pc + 1)
+    | FSUB ->
+        if Stack.length stack < 2 then
+          type_error "Runtime Error: Stack underflow during FSUB"
+        else
+          let b = Stack.pop stack in
+          let a = Stack.pop stack in
+          let a_type = GC.find_object (int_of_float a) in
+          let b_type = GC.find_object (int_of_float b) in
+          (match (a_type, b_type) with
+          | Some (GC.IntObj a_val), Some (GC.IntObj b_val) ->
+              let result = Int64.sub a_val b_val in
+              let result_id = GC.allocate_int result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.FloatObj b_val) ->
+              let result = a_val -. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.IntObj a_val), Some (GC.FloatObj b_val) ->
+              let result = Int64.to_float a_val -. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.IntObj b_val) ->
+              let result = a_val -. Int64.to_float b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | _, _ -> type_error "Invalid types for subtraction");
+          execute_bytecode instructions env (pc + 1)
+    | FMUL ->
+        if Stack.length stack < 2 then
+          type_error "Runtime Error: Stack underflow during FMUL"
+        else
+          let a = Stack.pop stack in
+          let b = Stack.pop stack in
+          let a_type = GC.find_object (int_of_float a) in
+          let b_type = GC.find_object (int_of_float b) in
+          (match (a_type, b_type) with
+          | Some (GC.IntObj a_val), Some (GC.IntObj b_val) ->
+              let result = Int64.mul a_val b_val in
+              let result_id = GC.allocate_int result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.FloatObj b_val) ->
+              let result = a_val *. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.IntObj a_val), Some (GC.FloatObj b_val) ->
+              let result = Int64.to_float a_val *. b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.IntObj b_val) ->
+              let result = a_val *. Int64.to_float b_val in
+              let result_id = GC.allocate_float result in
+              GC.add_root result_id;
+              Stack.push (float_of_int result_id) stack
+          | _, _ -> type_error "Invalid types for multiplication");
+          execute_bytecode instructions env (pc + 1)
+    | FDIV ->
+        if Stack.length stack < 2 then
+          type_error "Runtime Error: Stack underflow during FDIV"
+        else
+          let b = Stack.pop stack in
+          let a = Stack.pop stack in
+          let a_type = GC.find_object (int_of_float a) in
+          let b_type = GC.find_object (int_of_float b) in
+          (match (a_type, b_type) with
+          | Some (GC.IntObj a_val), Some (GC.IntObj b_val) ->
+              if b_val = 0L then type_error "Division by zero"
+              else
+                let result = Int64.div a_val b_val in
+                let result_id = GC.allocate_int result in
+                GC.add_root result_id;
+                Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.FloatObj b_val) ->
+              if b_val = 0.0 then type_error "Division by zero"
+              else
+                let result = a_val /. b_val in
+                let result_id = GC.allocate_float result in
+                GC.add_root result_id;
+                Stack.push (float_of_int result_id) stack
+          | Some (GC.IntObj a_val), Some (GC.FloatObj b_val) ->
+              if b_val = 0.0 then type_error "Division by zero"
+              else
+                let result = Int64.to_float a_val /. b_val in
+                let result_id = GC.allocate_float result in
+                GC.add_root result_id;
+                Stack.push (float_of_int result_id) stack
+          | Some (GC.FloatObj a_val), Some (GC.IntObj b_val) ->
+              if b_val = 0L then type_error "Division by zero"
+              else
+                let result = a_val /. Int64.to_float b_val in
+                let result_id = GC.allocate_float result in
+                GC.add_root result_id;
+                Stack.push (float_of_int result_id) stack
+          | _, _ -> type_error "Invalid types for division");
           execute_bytecode instructions env (pc + 1)
     | LOAD_VAR name -> (
         match List.assoc_opt name env with
@@ -78,12 +206,13 @@ let rec execute_bytecode instructions env pc =
         else
           let value = Stack.pop stack in
           let id = int_of_float value in
+          Printf.printf "DEBUG: Trying to print object with id %d\n" id;
           (match GC.find_object id with
           | Some (GC.StringObj str) ->
               let proc_str = replace_escape_sequences str in
               Printf.printf "%s\n" proc_str
           | Some (GC.IntObj i) -> Printf.printf "%Ld\n" i
-          | Some (GC.FloatObj f) -> Printf.printf "%f\n" f
+          | Some (GC.FloatObj f) -> Printf.printf "%.2f\n" f
           | None -> Printf.printf "<Unknown Object>\n");
           execute_bytecode instructions env (pc + 1)
 
@@ -91,4 +220,6 @@ let run instructions =
   try
     GC.run_gc ();
     execute_bytecode (Array.of_list instructions) [] 0
-  with Failure msg -> failwith msg
+  with
+  | Failure msg -> failwith msg
+  | TypeError msg -> failwith msg

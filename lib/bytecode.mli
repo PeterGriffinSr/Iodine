@@ -5,6 +5,9 @@ type opcode =
   | STORE_VAR of string
   | LOAD_STRING of string
   | FADD
+  | FSUB
+  | FMUL
+  | FDIV
   | PRINT
 
 val pp_opcode : Format.formatter -> opcode -> unit

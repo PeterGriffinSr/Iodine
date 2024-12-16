@@ -7,6 +7,9 @@ type opcode =
   | STORE_VAR of string
   | LOAD_STRING of string
   | FADD
+  | FSUB
+  | FMUL
+  | FDIV
   | PRINT
 
 let pp_opcode fmt = function
@@ -16,18 +19,24 @@ let pp_opcode fmt = function
   | STORE_VAR name -> Format.fprintf fmt "STORE_VAR %s" name
   | LOAD_STRING value -> Format.fprintf fmt "LOAD_STRING %s" value
   | FADD -> Format.fprintf fmt "FADD"
+  | FSUB -> Format.fprintf fmt "FSUB"
+  | FMUL -> Format.fprintf fmt "FMUL"
+  | FDIV -> Format.fprintf fmt "FDIV"
   | PRINT -> Format.fprintf fmt "PRINT"
 
 let rec compile_expr = function
   | Expr.IntExpr { value } -> [ LOAD_INT value ]
   | Expr.FloatExpr { value } -> [ LOAD_FLOAT value ]
   | Expr.StringExpr { value } -> [ LOAD_STRING value ]
-  | Expr.BinaryExpr { left; operator; right } -> (
-      let left_bytecode = compile_expr left in
-      let right_bytecode = compile_expr right in
+  | Ast.Expr.BinaryExpr { left; operator; right } -> (
+      compile_expr left @ compile_expr right
+      @
       match operator with
-      | Ast.Plus -> left_bytecode @ right_bytecode @ [ FADD ]
-      | _ -> failwith "ByteCode: Unsupported operator")
+      | Ast.Plus -> [ FADD ]
+      | Ast.Minus -> [ FSUB ]
+      | Ast.Star -> [ FMUL ]
+      | Ast.Slash -> [ FDIV ]
+      | _ -> failwith "Unsupported operator")
   | Ast.Expr.VarExpr name -> [ LOAD_VAR name ]
   | Ast.Expr.CallExpr { callee; arguments } -> (
       match callee with

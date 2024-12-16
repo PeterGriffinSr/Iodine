@@ -1,5 +1,4 @@
 (lang dune 3.17)
-(using menhir 3.0)
 
 (name Iodine)
 (version 0.1.0)
@@ -15,6 +14,4 @@
  (depends
   (ocaml (>= 5.2.1))
   "dune"
-  "menhir"
-  "ppx_deriving"
-  "odoc"))
+  "ppx_deriving"))

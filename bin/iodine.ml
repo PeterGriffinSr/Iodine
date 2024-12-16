@@ -9,26 +9,6 @@ let print_help () =
 
 let print_version () = Printf.printf "Iodine %s\n" (Version.version ())
 
-let read_file filename =
-  let input_channel = open_in filename in
-  let lines = ref [] in
-  try
-    while true do
-      lines := input_line input_channel :: !lines
-    done;
-    []
-  with End_of_file ->
-    close_in input_channel;
-    List.rev !lines
-
-let print_error_line filename line_num column =
-  let lines = read_file filename in
-  if line_num > 0 && line_num <= List.length lines then (
-    let error_line = List.nth lines (line_num - 1) in
-    Printf.eprintf "%s\n" error_line;
-    Printf.eprintf "%s^\n" (String.make (column - 1) ' '))
-  else Printf.eprintf "Error: could not locate the line causing the error.\n"
-
 let () =
   let speclist =
     [
@@ -72,6 +52,8 @@ let () =
   let lexbuf = Lexing.from_channel input_channel in
   try
     let ast = Parser.program Lexer.token lexbuf in
+    Printf.printf "%s\n" (Ast.Stmt.show ast);
+
     let bytecode = Bytecode.compile_stmt ast in
     List.iter
       (fun op ->
@@ -83,13 +65,6 @@ let () =
 
     close_in input_channel
   with
-  | Parser.Error ->
-      let line = Lexer.get_line () in
-      let column = Lexer.get_column () in
-      Printf.eprintf "SyntaxError: error at line %d, column %d\n" line column;
-      print_error_line !filename line column;
-      close_in_noerr input_channel;
-      exit 1
   | e ->
       close_in_noerr input_channel;
       raise e

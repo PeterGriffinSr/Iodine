@@ -3,6 +3,12 @@ module GC = struct
 
   let heap = Hashtbl.create 100
   let root_set = Hashtbl.create 10
+  let id_counter = ref 0
+
+  let new_id () =
+    let id = !id_counter in
+    incr id_counter;
+    id
 
   let mark visited id =
     if Hashtbl.mem visited id then ()
@@ -27,18 +33,18 @@ module GC = struct
     sweep visited
 
   let allocate_string str =
-    let id = Hashtbl.hash str in
-    Hashtbl.replace heap id (StringObj str);
+    let id = new_id () in
+    Hashtbl.add heap id (StringObj str);
     id
 
   let allocate_int value =
-    let id = Hashtbl.hash value in
-    Hashtbl.replace heap id (IntObj value);
+    let id = new_id () in
+    Hashtbl.add heap id (IntObj value);
     id
 
   let allocate_float value =
-    let id = Hashtbl.hash value in
-    Hashtbl.replace heap id (FloatObj value);
+    let id = new_id () in
+    Hashtbl.add heap id (FloatObj value);
     id
 
   let add_root id = Hashtbl.replace root_set id true
