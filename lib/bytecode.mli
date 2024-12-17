@@ -8,7 +8,24 @@ type opcode =
   | FSUB
   | FMUL
   | FDIV
+  | POWER
+  | CONCAT
+  | AND
+  | OR
+  | GREATER
+  | LESS
+  | EQUAL
+  | NEQ
+  | GEQ
+  | LEQ
+  | TOSTRING
+  | TOINT
+  | NOT
+  | INC
+  | DEC
   | PRINT
+  | JUMP_IF_FALSE of int
+  | JUMP of int
 
 val pp_opcode : Format.formatter -> opcode -> unit
 val compile_expr : Ast.Expr.t -> opcode list

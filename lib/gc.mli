@@ -3,6 +3,11 @@ module GC : sig
 
   val heap : (int, gc_obj) Hashtbl.t
   val root_set : (int, bool) Hashtbl.t
+  val id_counter : int ref
+  val add_root : int -> unit
+  val remove_root : int -> unit
+  val find_object : int -> gc_obj option
+  val new_id : unit -> int
   val mark : (int, bool) Hashtbl.t -> int -> unit
   val mark_roots : unit -> (int, bool) Hashtbl.t
   val sweep : (int, 'a) Hashtbl.t -> unit
@@ -10,7 +15,5 @@ module GC : sig
   val allocate_string : string -> int
   val allocate_int : int64 -> int
   val allocate_float : float -> int
-  val add_root : int -> unit
-  val remove_root : int -> unit
-  val find_object : int -> gc_obj option
+  val store_string : string -> float
 end

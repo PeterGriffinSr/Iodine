@@ -64,7 +64,6 @@ let () =
     let _result = Vm.run bytecode in
 
     close_in input_channel
-  with
-  | e ->
-      close_in_noerr input_channel;
-      raise e
+  with e ->
+    close_in_noerr input_channel;
+    raise e

@@ -10,7 +10,24 @@ type opcode =
   | FSUB
   | FMUL
   | FDIV
+  | POWER
+  | CONCAT
+  | AND
+  | OR
+  | GREATER
+  | LESS
+  | EQUAL
+  | NEQ
+  | GEQ
+  | LEQ
+  | TOSTRING
+  | TOINT
+  | NOT
+  | INC
+  | DEC
   | PRINT
+  | JUMP_IF_FALSE of int
+  | JUMP of int
 
 let pp_opcode fmt = function
   | LOAD_INT value -> Format.fprintf fmt "LOAD_INT %d" (Int64.to_int value)
@@ -23,6 +40,23 @@ let pp_opcode fmt = function
   | FMUL -> Format.fprintf fmt "FMUL"
   | FDIV -> Format.fprintf fmt "FDIV"
   | PRINT -> Format.fprintf fmt "PRINT"
+  | POWER -> Format.fprintf fmt "POWER"
+  | CONCAT -> Format.fprintf fmt "CONCAT"
+  | AND -> Format.fprintf fmt "AND"
+  | OR -> Format.fprintf fmt "OR"
+  | GREATER -> Format.fprintf fmt "GREATER"
+  | LESS -> Format.fprintf fmt "LESS"
+  | EQUAL -> Format.fprintf fmt "EQUAL"
+  | NEQ -> Format.fprintf fmt "NEQ"
+  | GEQ -> Format.fprintf fmt "GEQ"
+  | LEQ -> Format.fprintf fmt "LEQ"
+  | TOSTRING -> Format.fprintf fmt "TOSTRING"
+  | TOINT -> Format.fprintf fmt "TOINT"
+  | NOT -> Format.fprintf fmt "NOT"
+  | INC -> Format.fprintf fmt "INC"
+  | DEC -> Format.fprintf fmt "DEC"
+  | JUMP_IF_FALSE label -> Format.fprintf fmt "JUMP_IF_FALSE %d" label
+  | JUMP label -> Format.fprintf fmt "JUMP %d" label
 
 let rec compile_expr = function
   | Expr.IntExpr { value } -> [ LOAD_INT value ]
@@ -36,6 +70,16 @@ let rec compile_expr = function
       | Ast.Minus -> [ FSUB ]
       | Ast.Star -> [ FMUL ]
       | Ast.Slash -> [ FDIV ]
+      | Ast.Power -> [ POWER ]
+      | Ast.Carot -> [ CONCAT ]
+      | Ast.LogicalAnd -> [ AND ]
+      | Ast.LogicalOr -> [ OR ]
+      | Ast.Greater -> [ GREATER ]
+      | Ast.Less -> [ LESS ]
+      | Ast.Eq -> [ EQUAL ]
+      | Ast.Neq -> [ NEQ ]
+      | Ast.Geq -> [ GEQ ]
+      | Ast.Leq -> [ LEQ ]
       | _ -> failwith "Unsupported operator")
   | Ast.Expr.VarExpr name -> [ LOAD_VAR name ]
   | Ast.Expr.CallExpr { callee; arguments } -> (
@@ -45,7 +89,24 @@ let rec compile_expr = function
             List.fold_left (fun acc arg -> acc @ compile_expr arg) [] arguments
           in
           args_bytecode @ [ PRINT ]
+      | Ast.Expr.VarExpr "int" ->
+          let args_bytecode =
+            List.fold_left (fun acc arg -> acc @ compile_expr arg) [] arguments
+          in
+          args_bytecode @ [ TOINT ]
+      | Ast.Expr.VarExpr "str" ->
+          let args_bytecode =
+            List.fold_left (fun acc arg -> acc @ compile_expr arg) [] arguments
+          in
+          args_bytecode @ [ TOSTRING ]
       | _ -> failwith "Not implemented")
+  | Ast.Expr.UnaryExpr { operator; operand } -> (
+      let operand_bytecode = compile_expr operand in
+      match operator with
+      | Ast.Not -> operand_bytecode @ [ NOT ]
+      | Ast.Inc -> operand_bytecode @ [ INC ]
+      | Ast.Dec -> operand_bytecode @ [ DEC ]
+      | _ -> failwith "Unsupported unary operator")
   | _ -> failwith "Not implemented"
 
 let rec compile_stmt = function
@@ -65,4 +126,15 @@ let rec compile_stmt = function
         | None -> [ LOAD_INT 0L ]
       in
       expr_bytecode @ [ STORE_VAR identifier ]
+  | Ast.Stmt.IfStmt { condition; then_branch; else_branch } ->
+      let condition_bytecode = compile_expr condition in
+      let then_bytecode = compile_stmt then_branch in
+      let else_bytecode =
+        match else_branch with Some branch -> compile_stmt branch | None -> []
+      in
+      let then_jump_label = List.length then_bytecode + 1 in
+      let else_jump_label = List.length else_bytecode + 1 in
+      condition_bytecode
+      @ [ JUMP_IF_FALSE (then_jump_label + 1) ]
+      @ then_bytecode @ [ JUMP else_jump_label ] @ else_bytecode
   | _ -> failwith "Not implemented"

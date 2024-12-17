@@ -4,6 +4,9 @@ module GC = struct
   let heap = Hashtbl.create 100
   let root_set = Hashtbl.create 10
   let id_counter = ref 0
+  let add_root id = Hashtbl.replace root_set id true
+  let remove_root id = Hashtbl.remove root_set id
+  let find_object id = Hashtbl.find_opt heap id
 
   let new_id () =
     let id = !id_counter in
@@ -47,7 +50,8 @@ module GC = struct
     Hashtbl.add heap id (FloatObj value);
     id
 
-  let add_root id = Hashtbl.replace root_set id true
-  let remove_root id = Hashtbl.remove root_set id
-  let find_object id = Hashtbl.find_opt heap id
+  let store_string str =
+    let id = allocate_string str in
+    add_root id;
+    float_of_int id
 end

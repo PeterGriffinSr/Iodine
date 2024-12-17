@@ -1,1 +1,1 @@
-print("Hello, world!")
+print(5 + 5 * 2 / 5 - 8)
