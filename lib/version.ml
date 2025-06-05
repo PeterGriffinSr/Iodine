@@ -2,10 +2,13 @@ let detect_system () =
   match Sys.os_type with
   | "Win32" -> "Windows"
   | "Unix" ->
-      let ic = Unix.open_process_in "uname" in
-      let uname = try input_line ic with End_of_file -> "Unknown Unix" in
-      let _ = Unix.close_process_in ic in
-      String.capitalize_ascii uname
+      String.capitalize_ascii
+        (try
+           let ic = Unix.open_process_in "uname" in
+           let r = input_line ic in
+           let _ = Unix.close_process_in ic in
+           r
+         with _ -> "unknown")
   | _ -> "Unknown"
 
 let version = (0, 1, 0)

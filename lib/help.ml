@@ -1,5 +1,5 @@
 let usage =
-  {|Usage: nix [options] <files>
+  {|Usage: iodine [options] <files>
 
 Options:
   --help        Display this infomation.
