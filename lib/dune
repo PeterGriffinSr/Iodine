@@ -1,0 +1,13 @@
+(library
+ (name IodineLib)
+ (modules ast lexer parser token version help)
+ (libraries unix ppx_deriving.show)
+ (preprocess
+  (pps ppx_deriving.show)))
+
+(documentation)
+
+(ocamllex lexer)
+
+(menhir
+ (modules parser))

@@ -1,0 +1,20 @@
+# === System-generated files ===
+Thumbs.db
+.DS_Store
+
+# === Editor & IDE files ===
+*~
+*#
+*.swp
+#*#
+
+# === Build artifacts ===
+!*.ml
+!*.mli
+!*.md
+!*/
+_build
+
+# === Build system caches ===
+.cache/
+.vscode/
